@@ -9,6 +9,10 @@ import CoreData
 import SwiftUI
 
 struct DetailView: View {
+    @Environment(\.managedObjectContext) var viewContext
+    @Environment(\.presentationMode) var presentationMode
+    @State private var showingDeleteAlert = false
+    
     let book: Book
     
     var body: some View {
@@ -32,6 +36,11 @@ struct DetailView: View {
                     .font(.title)
                     .foregroundColor(.secondary)
                 
+                if let theDate = self.book.date {
+                    //Text(date)
+                    Text(theDate, style: .date)
+                }
+                
                 Text(self.book.review ?? "No review")
                     .padding()
                 
@@ -40,6 +49,33 @@ struct DetailView: View {
             }
         }
         .navigationBarTitle(Text(book.title ?? "Unknown Book"), displayMode: .inline)
+        .navigationBarItems(
+            trailing: Button(
+                action: {
+                    self.showingDeleteAlert = true
+                }
+            ) {
+                Image(systemName: "trash")
+            }
+        )
+        .alert(isPresented: $showingDeleteAlert) {
+            Alert(
+                title: Text("Delete book"),
+                message: Text("Are you sure?"),
+                primaryButton: .destructive(Text("Delete")) {
+                    self.deleteBook()
+                },
+                secondaryButton: .cancel()
+            )
+        }
+    }
+    
+    func deleteBook() {
+        viewContext.delete(book)
+        
+        try? self.viewContext.save()
+        
+        presentationMode.wrappedValue.dismiss()
     }
 }
 
@@ -53,6 +89,7 @@ struct DetailView_Previews: PreviewProvider {
         book.genre = "Fantasy"
         book.rating = 4
         book.review = "This was great, I really enjoyed it."
+        book.date = Date()
         
         return NavigationView {
             DetailView(book: book)

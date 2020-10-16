@@ -28,18 +28,14 @@ struct PushButton: View {
 }
 
 struct ContentView: View {
-//    @FetchRequest(entity: Student.entity(), sortDescriptors: []) var students: FetchedResults<Student>
-    
     @Environment(\.managedObjectContext) var viewContext
 
-    @FetchRequest(entity: Book.entity(), sortDescriptors: []) var books: FetchedResults<Book>
+    @FetchRequest(entity: Book.entity(), sortDescriptors: [
+        NSSortDescriptor(keyPath: \Book.title, ascending: true),
+        NSSortDescriptor(keyPath: \Book.author, ascending: true)
+    ]) var books: FetchedResults<Book>
     
     @State private var showingAddScreen = false
-
-//    @FetchRequest(
-//        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-//        animation: .default)
-//    private var items: FetchedResults<Item>
 
 //    @State private var rememberMe = false
     
@@ -60,14 +56,16 @@ struct ContentView: View {
                         VStack(alignment: .leading) {
                             Text(book.title ?? "Unknown title")
                                 .font(.headline)
+                                .foregroundColor(book.rating > 1 ? .primary : .red)
                             Text(book.author ?? "Unknown author")
                                 .foregroundColor(.secondary)
                         }
                     }
                 }
+                .onDelete(perform: deleteBooks)
             }
             .navigationBarTitle("Bookworm")
-            .navigationBarItems(trailing: Button(action: {
+            .navigationBarItems(leading: EditButton(), trailing: Button(action: {
                 self.showingAddScreen.toggle()
             }) {
                 Image(systemName: "plus")
@@ -144,6 +142,15 @@ struct ContentView: View {
 //        }
 
     }
+    
+    func deleteBooks(at offsets: IndexSet) {
+        for offset in offsets {
+            let book = books[offset]
+            viewContext.delete(book)
+        }
+        
+        try? viewContext.save()
+    }
         
 //    private func addItem() {
 //        withAnimation {
@@ -175,6 +182,8 @@ struct ContentView: View {
 //            }
 //        }
 //    }
+    
+    
 }
 
 //private let itemFormatter: DateFormatter = {
@@ -192,6 +201,6 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
     }
 }

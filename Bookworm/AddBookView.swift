@@ -17,7 +17,9 @@ struct AddBookView: View {
     @State private var genre = ""
     @State private var review = ""
     
-    let genres = ["Fantasy", "Horror", "Kids", "Mystery", "Poetry", "Romance", "Thriller"]
+    private var date: Date = Date()
+    
+    let genres = ["Fantasy", "Horror", "Kids", "Mystery", "Poetry", "Romance", "Science Fiction", "Thriller"]
 
     var body: some View {
         NavigationView {
@@ -54,14 +56,32 @@ struct AddBookView: View {
                         newBook.rating = Int16(self.rating)
                         newBook.genre = self.genre
                         newBook.review = self.review
+                        newBook.date = self.date
                         
                         try? self.viewContext.save()
                         self.presentationMode.wrappedValue.dismiss()
                     }
+                    .disabled(validateForm()==false)
                 }
             }
             .navigationTitle("Add Book")
         }
+    }
+    
+    func validateForm() -> Bool {
+        if self.title.isEmpty {
+            return false
+        }
+        
+        if self.author.isEmpty {
+            return false
+        }
+        
+        if self.genre.isEmpty {
+            return false
+        }
+        
+        return true
     }
 }
 
